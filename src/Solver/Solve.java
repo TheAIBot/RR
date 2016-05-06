@@ -1,12 +1,32 @@
 package Solver;
 
-import java.io.IOException;
+import java.util.Scanner;
 
 public class Solve {
 
-	public static void main(String[] args) throws IOException {
-		Board board = Loader.loadBoard("D:\\Java Programs\\RR\\obligatorisk_synlig\\Test1.in");
-		System.out.println(board.toString());
+	public static void main(String[] args) {
+		//System.in.read();
+		
+		
+		//int timeConstraint = Integer.valueOf(args[0]);
+		int timeConstraint = 5;
+		
+		
+		//long startTime = System.nanoTime();
+		//Board board = Loader.loadBoard("obligatorisk_synlig\\Test5.in");
+		//Board board = Loader.loadBoard("konkurrence_random\\1-200-Random.in");
+		//Board board = Loader.loadBoard("konkurrence_random\\2-05-Random.in");
+		Board board = Loader.loadBoard("konkurrence_random\\3-07-Random.in");
+		//Board board = Loader.loadBoard(new Scanner(System.in));
+		BotPathDirection[] directions = RobotPath.getRobotPath(board, timeConstraint * 1000000000L);
+		//long stopTime = System.nanoTime();
+		
+		//System.out.println(board.toString());
+		for (BotPathDirection botPathDirection : directions) {
+			System.out.println(botPathDirection.toString());
+		}
+		//System.out.println("runtime: " + (stopTime - startTime) / 1000000000.0 + "s");
+		//System.out.println("total memory used: " + ((Runtime.getRuntime().totalMemory()) / (1024 * 1024)) + "mb");
+		//System.out.println("memory used by process: " + ((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024)) + "mb");
 	}
-
 }
