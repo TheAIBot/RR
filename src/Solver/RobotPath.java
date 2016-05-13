@@ -1,9 +1,7 @@
 package Solver;
 
-import java.awt.Point;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -17,7 +15,6 @@ public final class RobotPath {
 	
 	//optimizations:
 	//don't make Fillers when the direction the 0 robot will come from is blocked
-	//consider moving RobotDirectionChangePoint into RobotPathPart
 	//
 	//need to add:
 	//ability to find a path to a filler
@@ -162,81 +159,99 @@ public final class RobotPath {
 		
 		//bestRoute = routesToCheckout.peek();
 		
-		//while (System.nanoTime() - startTime + (timeConstraint * 0.2) < timeConstraint) {
-		while (true) {
+		while (System.nanoTime() - startTime + (timeConstraint * 0.2 * 1000000000L) < timeConstraint * 1000000000L) {
+		//while (true) {
 			final PotentialRoute shortestRoute = routesToCheckout.poll();
-			if (shortestRoute.buildPath(board)) {
-				final List<BotPathDirection> possibleBestRoute = shortestRoute.getPath(board);
-				if (possibleBestRoute != null &&
-					(bestRoute == null ||
-					 possibleBestRoute.size() < bestRoute.length)) {
-					bestRoute = possibleBestRoute.toArray(new BotPathDirection[possibleBestRoute.size()]);
-				}
+			if (shortestRoute == null) {
+				break;
 			}
-			routesToCheckout.add(shortestRoute);
-			//shortestRoute.buildPath(board);
+			if (!shortestRoute.isValidPotentialRoute) {
+				continue;
+			}
+			if (shortestRoute.buildPath(board)) {
+				final RouteBuildingInformation routeInfo = shortestRoute.getPath(board);
+				if (routeInfo.route != null && routeInfo.canFindRoute) {
+					//Tools.printPath(routeInfo.route);
+					if (bestRoute == null ||
+							routeInfo.route.size() < bestRoute.length) {
+							bestRoute = routeInfo.route.toArray(new BotPathDirection[routeInfo.route.size()]);
+						}
+				}
+			} else if (!shortestRoute.isValidPotentialRoute) {
+				continue;
+			}
+			if (shortestRoute.isValidPotentialRoute) {
+				routesToCheckout.add(shortestRoute);
+			}
 		}
 		
 		
-		//return bestRoute;
+		return bestRoute;
+	}
+	
+	private static boolean isValidRouteStartDirection(Board board, int x, int y, Directions direction)
+	{
+		if (!board.isValidPosition(x + direction.translationX, y + direction.translationY)) {
+			return false;
+		}
+		MovePoint movePoint = board.staticMovePoints[x + direction.translationX][y + direction.translationY];
+		//if it's a wall
+		if (movePoint == null) {
+			return false;
+		}
+		return true;
 	}
 	
 	private static PotentialRoute getPotentialRouteFromGoal(Board board, int endX, int endY, Directions stopPointDirection, int[] robotsThisPathIsFor, int[] robotsToBuildPathWith)
 	{
-		RobotPathPart part = getListOfPossiblePathsOrderedByBotsRequired(board, 
-				  endX, 
-				  endY, 
-				  !board.isStopPoint(endX, endY, stopPointDirection), 
-				  stopPointDirection.getOppositeDirection(), 
-				  robotsThisPathIsFor, 
-				  robotsToBuildPathWith);
-		if (part != null) {
-			return new PotentialRoute(part, endX,  endY);
-		} else {
-			return null;
+		if (isValidRouteStartDirection(board, endX, endY, stopPointDirection.getOppositeDirection())) {
+			RobotPathPart part = getListOfPossiblePathsOrderedByBotsRequired(board, 
+					  endX, 
+					  endY, 
+					  !board.isStopPoint(endX, endY, stopPointDirection), 
+					  stopPointDirection, 
+					  robotsThisPathIsFor, 
+					  robotsToBuildPathWith);
+			if (part != null) {
+				//part.printPart(board);
+				return new PotentialRoute(part, endX,  endY);
+			}
 		}
-
+		return null;
 	}
 		
-	public static RobotPathPart getListOfPossiblePathsOrderedByBotsRequired(Board board, int x, int y, boolean robotOnEnd, Directions direction, int[] robotsThisPathIsFor, int[] robotsToBuildPathWith)
+	public static RobotPathPart getListOfPossiblePathsOrderedByBotsRequired(Board board, int x, int y, boolean hasNoStopPoint, Directions stopPointDirection, int[] robotsThisPathIsFor, int[] robotsToBuildPathWith)
 	{
 		final RobotPathPart robotPathPart = new RobotPathPart(x, y, robotsThisPathIsFor, robotsToBuildPathWith);
-		x += direction.translationX;
-		y += direction.translationY;
+		if (!hasNoStopPoint) {
+			stopPointDirection = stopPointDirection.getOppositeDirection();
+		}
+		x += stopPointDirection.translationX;
+		y += stopPointDirection.translationY;
+		
+		if (board.isValidPosition(x, y) && hasNoStopPoint) {
+			addRobotDirectionChangePoint(board, board.staticMovePoints[x][y], robotPathPart, stopPointDirection, stopPointDirection.getOppositeDirection(), x, y, hasNoStopPoint);
+		}
+		
 		while (board.isValidPosition(x, y)) {
 			final MovePoint movePoint = board.staticMovePoints[x][y];
-			boolean isFillerFollowingPathAllowed = true;
-			switch (direction) {
+			switch (stopPointDirection) {
 				case Up:
-					isFillerFollowingPathAllowed = robotOnEnd && !(movePoint.up == null && (movePoint.left == null || movePoint.right == null));
-					break;
 				case Down:
-					isFillerFollowingPathAllowed = robotOnEnd && !(movePoint.down == null && (movePoint.left == null || movePoint.right == null));
+					addRobotDirectionChangePoint(board, movePoint, robotPathPart, stopPointDirection, Directions.Left, x, y, hasNoStopPoint);
+					addRobotDirectionChangePoint(board, movePoint, robotPathPart, stopPointDirection, Directions.Right, x, y, hasNoStopPoint);
 					break;
 				case Left:
-					isFillerFollowingPathAllowed = robotOnEnd && !(movePoint.left == null && (movePoint.up == null || movePoint.down == null));
-					break;
 				case Right:
-					isFillerFollowingPathAllowed = robotOnEnd && !(movePoint.right == null && (movePoint.up == null || movePoint.down == null));
+					addRobotDirectionChangePoint(board, movePoint, robotPathPart, stopPointDirection, Directions.Up, x, y, hasNoStopPoint);
+					addRobotDirectionChangePoint(board, movePoint, robotPathPart, stopPointDirection, Directions.Down, x, y, hasNoStopPoint);
 					break;
 			}
-			switch (direction) {
-			case Up:
-			case Down:
-				addRobotDirectionChangePoint(board, movePoint, robotPathPart, direction, Directions.Left, x, y, robotOnEnd, isFillerFollowingPathAllowed);
-				addRobotDirectionChangePoint(board, movePoint, robotPathPart, direction, Directions.Right, x, y, robotOnEnd, isFillerFollowingPathAllowed);
-				break;
-			case Left:
-			case Right:
-				addRobotDirectionChangePoint(board, movePoint, robotPathPart, direction, Directions.Up, x, y, robotOnEnd, isFillerFollowingPathAllowed);
-				addRobotDirectionChangePoint(board, movePoint, robotPathPart, direction, Directions.Down, x, y, robotOnEnd, isFillerFollowingPathAllowed);
+			if (hasNoStopPoint) {
 				break;
 			}
-			if (robotOnEnd) {
-				break;
-			}
-			x += direction.translationX;
-			y += direction.translationY;
+			x += stopPointDirection.translationX;
+			y += stopPointDirection.translationY;
 		}
 		if (robotPathPart.robotDirectionChangePoints.size() == 0) {
 			return null;
@@ -252,8 +267,7 @@ public final class RobotPath {
 													 Directions fillerDirection,
 													 int x, 
 													 int y, 
-													 boolean robotOnEnd, 
-													 boolean isFillerFollowingPathAllowed)
+													 boolean robotOnEnd)
 	{
 		PriorityQueue<RobotFiller> fillers = new PriorityQueue<RobotFiller>();
 		switch (fillerDirection) {
@@ -269,12 +283,6 @@ public final class RobotPath {
 			case Right:
 				getFillersRight(board, movePoint, fillers, x, y, robotOnEnd, direction.getOppositeDirection(), robotPathPart);
 				break;
-		}
-		if (isFillerFollowingPathAllowed) {
-			RobotFiller filler = getFillerFollowingPath(movePoint, direction, robotPathPart, robotOnEnd);
-			if (filler != null) {
-				fillers.add(filler);	
-			}
 		}
 		if (fillers.size() > 0) {
 			robotPathPart.addRobotDirectionChangePoint(new RobotDirectionChangePoint(fillers, x, y, robotPathPart));
@@ -318,7 +326,7 @@ public final class RobotPath {
 		if (startPoint.down != null) {
 			//is there any point to making it move up to moveX <= movePoint.left.x?
 			//+1 so the search starts at a valid search position to the left
-				for (int moveY = y + 1; moveY < startPoint.down.y; moveY++) {
+				for (int moveY = y + 1; moveY <= startPoint.down.y; moveY++) {
 					MovePoint possibleRobotAnchorPoint = board.staticMovePoints[x][moveY];
 					if (possibleRobotAnchorPoint.left == null ||
 						possibleRobotAnchorPoint.right == null) {
@@ -368,7 +376,7 @@ public final class RobotPath {
 		if (startPoint.right != null) {
 			//is there any point to making it move up to moveX <= movePoint.left.x?
 			//+1 so the search starts at a valid search position to the left
-				for (int moveX = x + 1; moveX < startPoint.right.x; moveX++) {
+				for (int moveX = x + 1; moveX <= startPoint.right.x; moveX++) {
 					MovePoint possibleRobotAnchorPoint = board.staticMovePoints[moveX][y];
 					if (possibleRobotAnchorPoint.up == null ||
 						possibleRobotAnchorPoint.down == null) {
@@ -382,33 +390,6 @@ public final class RobotPath {
 		}
 	}
 
-	private static RobotFiller getFillerFollowingPath(MovePoint start, Directions direction, RobotPathPart parentPart, boolean robotOnEnd)
-	{
-		int extra = 0;
-		if (robotOnEnd) {
-			extra = 1;
-		}
-		switch (direction) {
-			case Up:
-				if (start.up != null) {
-					return new RobotFiller(start, start.up, start.y - start.up.y + extra, direction.getOppositeDirection(), true, parentPart);
-				}
-			case Down:
-				if (start.down != null) {
-					return new RobotFiller(start, start.down, start.down.y - start.y + extra, direction.getOppositeDirection(), true, parentPart);
-				}
-			case Left:
-				if (start.left != null) {
-					return new RobotFiller(start, start.left, start.x - start.left.x + extra, direction.getOppositeDirection(), true, parentPart);
-				}
-			case Right:
-				if (start.right != null) {
-					return new RobotFiller(start, start.right, start.right.x - start.x + extra, direction.getOppositeDirection(), true, parentPart);
-				}
-		}
-		return null;
-	}
-
 	public static DepthPointer getInterceptingDepthPointer(Board board, Map<Integer, DepthPointer> DepthMap, int x, int y, Directions interceptDirection)
 	{
 		final MovePoint currentPosition = board.staticMovePoints[x][y];
@@ -417,10 +398,10 @@ public final class RobotPath {
 			case Up:
 				if (currentPosition.up != null) {
 					for (DepthPointer depthPointer : DepthMap.values()) {
-						if (depthPointer.y == y &&
+						if (depthPointer.x == x &&
 							depthPointer.directionToLowest == Directions.Down &&
-							depthPointer.x >= x && 
-							depthPointer.x <= currentPosition.up.x) {
+							depthPointer.y >= y && 
+							depthPointer.y >= currentPosition.up.y) {
 							interceptingDepthPointer = depthPointer;
 							break;
 						}
@@ -430,10 +411,10 @@ public final class RobotPath {
 			case Down:
 				if (currentPosition.down != null) {
 					for (DepthPointer depthPointer : DepthMap.values()) {
-						if (depthPointer.y == y &&
+						if (depthPointer.x == x &&
 							depthPointer.directionToLowest == Directions.Up &&
-							depthPointer.x <= x && 
-							depthPointer.x >= currentPosition.down.x) {
+							depthPointer.y <= y && 
+							depthPointer.y <= currentPosition.down.y) {
 							interceptingDepthPointer = depthPointer;
 							break;
 						}
@@ -443,10 +424,10 @@ public final class RobotPath {
 			case Left:
 				if (currentPosition.left != null) {
 					for (DepthPointer depthPointer : DepthMap.values()) {
-						if (depthPointer.x == x &&
+						if (depthPointer.y == y &&
 							depthPointer.directionToLowest == Directions.Right &&
-							depthPointer.y <= y && 
-							depthPointer.y >= currentPosition.left.y) {
+							depthPointer.x >= x && 
+							depthPointer.x >= currentPosition.left.x) {
 							interceptingDepthPointer = depthPointer;
 							break;
 						}
@@ -456,10 +437,10 @@ public final class RobotPath {
 			case Right:
 				if (currentPosition.right != null) {
 					for (DepthPointer depthPointer : DepthMap.values()) {
-						if (depthPointer.x == x &&
+						if (depthPointer.y == y &&
 							depthPointer.directionToLowest == Directions.Left &&
-							depthPointer.y >= y && 
-							depthPointer.y <= currentPosition.right.y) {
+							depthPointer.x <= x && 
+							depthPointer.x <= currentPosition.right.x) {
 							interceptingDepthPointer = depthPointer;
 							break;
 						}

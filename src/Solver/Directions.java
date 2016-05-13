@@ -1,7 +1,5 @@
 package Solver;
 
-import java.awt.Point;
-
 public enum Directions {
 	Up(0,-1)
 	{

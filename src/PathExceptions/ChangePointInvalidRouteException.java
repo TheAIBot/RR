@@ -1,5 +1,5 @@
 package PathExceptions;
 
-public class ChangePointInvalidRouteException extends Error {
+public class ChangePointInvalidRouteException extends Exception {
 
 }

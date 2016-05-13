@@ -105,14 +105,30 @@ public class Board {
     }
     
     public String toString() {
-    	StringBuilder sb = new StringBuilder(size * size);
-    	for (int x = 0; x < board.length; x++) {
-			for (int y = 0; y < board[0].length; y++) {
-				sb.append(board[y][x]);
+    	return Board.makeBoard(board);
+    }
+    
+    public static String makeBoard(char[][] map)
+    {
+    	StringBuilder sb = new StringBuilder(map.length * map.length);
+    	for (int x = 0; x < map.length; x++) {
+			for (int y = 0; y < map[0].length; y++) {
+				sb.append(map[y][x]);
 			}
 			sb.append(System.getProperty("line.separator"));
 		}
         return sb.toString();
     }
     
+    
+    public char[][] copyBoard()
+    {
+		char[][] copy = new char[size][size];
+		for (int x = 0; x < copy.length; x++) {
+			for (int y = 0; y < copy.length; y++) {
+				copy[x][y] = board[x][y];
+			}
+		}
+		return copy;
+    }
 }

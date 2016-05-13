@@ -1,6 +1,8 @@
 package Solver.SolverRobotPathParts;
 
 import java.awt.Point;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -43,66 +45,80 @@ public class RobotFiller implements Comparable<RobotFiller> {
 		if (requiredRobots == 0) {
 			return true;
 		}
+		//printFiller(routeInfo.board);
+		final List<BotPathDirection> thisFillersRoute = new ArrayList<BotPathDirection>();
+		final boolean[] isBotMoveable = Arrays.copyOf(routeInfo.isBotMoveable, routeInfo.isBotMoveable.length);
+		final Point[] botPositions = new Point[routeInfo.botPositions.length];
+		for (int i = 0; i < botPositions.length; i++) {
+			botPositions[i] = new Point(routeInfo.botPositions[i]);
+		}
+		
 		final int numberOfRobotsRequired = Math.abs(end.x - start.x) + Math.abs(end.y - start.y) + ((robotOnEnd)? 1 : 0);
 		final Point[] fillerPoints = new Point[numberOfRobotsRequired];
 		final int[] robotsPath = new int[numberOfRobotsRequired];
 		int robotFillerIndex = 0;
 		
-		int xTranslation = start.x - end.x;
-		int yTranslation = start.y - end.y;
-		if (numberOfRobotsRequired > 1) {
-			if (xTranslation < 0) {
-				xTranslation = -1;
-			} else if (xTranslation > 0) {
-				xTranslation = 1;
-			}
-			if (yTranslation < 0) {
-				yTranslation = -1;
-			} else if (yTranslation > 0) {
-				yTranslation = 1;
-			}
-		}
+		Directions robotBuildDirection = getDirectionFromTranslation(start.x - end.x, start.y - end.y);
 		
 		
 		int currentPosX = end.x;
 		int currentPosY = end.y;
 		for (int i = 0; i < fillerPoints.length; i++) {
 			fillerPoints[i] = new Point(currentPosX, currentPosY);
-			currentPosX += xTranslation;
-			currentPosY += yTranslation;
+			currentPosX += robotBuildDirection.translationX;
+			currentPosY += robotBuildDirection.translationY;
 		}
-		Directions robotBuildDirection = getDirectionFromTranslation(xTranslation, yTranslation);
 		int previousRobotFiller = -1;
 		for (int q = 0; q < fillerPoints.length; q++) {
 			Point goal =  fillerPoints[q];
 			final int[] robotIndexForRobotsThatCanReachFiller = new int[containerOfThisFiller.robotsToBuildPathWith.length];
 			final int[] robotIndexLength = new int[robotIndexForRobotsThatCanReachFiller.length];
-			for (int i = 0; i < robotIndexLength.length; i++) {
+			final DepthPointer[] robotIndexDepthPointer = new DepthPointer[robotIndexForRobotsThatCanReachFiller.length];
+			for (int i = 0; i < robotIndexForRobotsThatCanReachFiller.length; i++) {
 				robotIndexForRobotsThatCanReachFiller[i] = -1;
 			}
 			for (int i = 0; i < containerOfThisFiller.robotsToBuildPathWith.length; i++) {
 				final int robot = containerOfThisFiller.robotsToBuildPathWith[i];
-				final Point botPosition = routeInfo.botPositions[robot];
-				if (routeInfo.isBotMoveable[robot]) {
+				final Point botPosition = botPositions[robot];
+				if (isBotMoveable[robot]) {
 					Map<Integer, DepthPointer> robotDepthMap;
-					if (routeInfo.board.robotDepthMaps[robot] != null) {
-						robotDepthMap = routeInfo.board.robotDepthMaps[robot];
+					if (routeInfo.botsDepthMap[robot] != null) {
+						robotDepthMap = routeInfo.botsDepthMap[robot];
+						DepthPointer lowestPoint = robotDepthMap.get(Hasher.hashPoint(botPositions[robot]));
+						if (lowestPoint == null ||
+							lowestPoint.depth != 0) {
+							robotDepthMap = null;
+							robotDepthMap = RobotPath.getDepthGraph(routeInfo.board, botPosition.x, botPosition.y, goal.x, goal.y, true);
+						}
 					} else {
 						robotDepthMap = RobotPath.getDepthGraph(routeInfo.board, botPosition.x, botPosition.y, goal.x, goal.y, true);
 					}
-					routeInfo.board.robotDepthMaps[robot] = robotDepthMap;
+					routeInfo.botsDepthMap[robot] = robotDepthMap;
 					final int hash = Hasher.hashPoint(goal.x, goal.y);
 					if (robotDepthMap.containsKey(hash)) {
 						//ignoring robot collisions for now
 						DepthPointer goalPoint = robotDepthMap.get(hash);
 						robotIndexForRobotsThatCanReachFiller[i] = robot;
 						robotIndexLength[i] = goalPoint.depth;
+						robotIndexDepthPointer[i] = goalPoint;
 					} else {
-						DepthPointer goalPoint = RobotPath.getInterceptingDepthPointer(routeInfo.board, robotDepthMap, goal.x, goal.y, robotBuildDirection);
-						if (goalPoint != null) {
-							robotIndexForRobotsThatCanReachFiller[i] = robot;
-							robotIndexLength[i] = goalPoint.depth;
+						if (previousRobotFiller != -1) {
+							DepthPointer goalPoint = RobotPath.getInterceptingDepthPointer(routeInfo.board, 
+																						   robotDepthMap, 
+																						   botPositions[previousRobotFiller].x, 
+																						   botPositions[previousRobotFiller].y, 
+																						   robotBuildDirection.getOppositeDirection());
+							if (goalPoint != null) {
+								robotIndexForRobotsThatCanReachFiller[i] = robot;
+								robotIndexLength[i] = goalPoint.depth;
+								robotIndexDepthPointer[i] = goalPoint;
+							}
 						}
+//						DepthPointer goalPoint = RobotPath.getInterceptingDepthPointer(routeInfo.board, robotDepthMap, goal.x, goal.y, changedDirection);
+//						if (goalPoint != null) {
+//							robotIndexForRobotsThatCanReachFiller[i] = robot;
+//							robotIndexLength[i] = goalPoint.depth;
+//						}
 					}
 				}
 			}
@@ -117,48 +133,80 @@ public class RobotFiller implements Comparable<RobotFiller> {
 					if (robotIndexLength[index] < bestRobotLength) {
 						bestRobot = robotIndexForRobotsThatCanReachFiller[index];
 						bestRobotLength = robotIndexLength[index];
-						index++;
 					}
+					index++;
 				}
 				robotsPath[robotFillerIndex] = bestRobot;
 				robotFillerIndex++;
 				
-				routeInfo.isBotMoveable[bestRobot] = false;
+				isBotMoveable[bestRobot] = false;
 				if (previousRobotFiller != -1) {
-					routeInfo.isBotMoveable[bestRobot] = true;
+					isBotMoveable[previousRobotFiller] = true;
 				}
 				previousRobotFiller = bestRobot;
-				BotPathDirection[] routePart = RobotPath.getRobotPathToTarget(routeInfo.board, routeInfo.botPositions[bestRobot].x, routeInfo.botPositions[bestRobot].y, goal.x, goal.y, bestRobot);
+				
+				Map<Integer, DepthPointer> depthMap = RobotPath.getDepthGraph(routeInfo.board, botPositions[bestRobot].x, botPositions[bestRobot].y, goal.x, goal.y, true);
+				BotPathDirection[] routePart = null;
+				if (depthMap.containsKey(Hasher.hashPoint(goal))) {
+					routePart = RobotPath.getRobotPathToTarget(routeInfo.board, botPositions[bestRobot].x, botPositions[bestRobot].y, goal.x, goal.y, bestRobot);
+				} else {
+					//intercept finder point might have to be the old point
+					//badly optimized. can use a boolean value when valid route is found for the bot above or even use the depth pointer
+//					DepthPointer interceptPoint = RobotPath.getInterceptingDepthPointer(routeInfo.board, depthMap, goal.x, goal.y, changedDirection);
+//					if (interceptPoint == null) {
+//						interceptPoint = RobotPath.getInterceptingDepthPointer(routeInfo.board, 
+//																			   depthMap, 
+//																			   botPositions[previousRobotFiller].x, 
+//																			   botPositions[previousRobotFiller].y, 
+//																			   robotBuildDirection.getOppositeDirection());
+//						
+//					}
+					DepthPointer interceptPoint = robotIndexDepthPointer[index - 1];
+					routePart = RobotPath.getRobotPathToTargetFromDepthPoint(interceptPoint, bestRobot);
+				}
 				for (int j = 0; j < routePart.length; j++) {
-					routeInfo.route.add(routePart[j]);
+					thisFillersRoute.add(routePart[j]);
 				}
 				
-				routeInfo.botPositions[bestRobot] = goal;
+				botPositions[bestRobot] = goal;
 			}
 		}
+		
 		for (int i = 0; i < robotsPath.length; i++) {
 			final int robot = robotsPath[i];
-			routeInfo.isBotMoveable[robot] = true;
+			isBotMoveable[robot] = true;
 		}
-		
-		DepthPointer higestPoint = RobotPath.getInterceptingDepthPointer(routeInfo.board, routeInfo.board.robotDepthMaps[0], start.x, start.y, changedDirection);
+		DepthPointer higestPoint = RobotPath.getInterceptingDepthPointer(routeInfo.board, routeInfo.botsDepthMap[0], start.x, start.y, changedDirection);
+		if (higestPoint == null) {
+			return false;
+		}
 		BotPathDirection[] routePart = RobotPath.getRobotPathToTargetFromDepthPoint(higestPoint, 0);
+		routeInfo.route.addAll(thisFillersRoute);
 		for (int j = 0; j < routePart.length; j++) {
 			routeInfo.route.add(routePart[j]);
 		}
-		routeInfo.board.robotDepthMaps[0] = RobotPath.getDepthGraph(routeInfo.board, start.x, start.y, routeInfo.board.goal.x, routeInfo.board.goal.y, false);
-		routeInfo.botPositions[0] = new Point(start.x + changedDirection.translationX, start.y + changedDirection.translationY);
+		routeInfo.botPositions = botPositions;
+		if (robotOnEnd) {
+			routeInfo.botPositions[0] = new Point(start.x + changedDirection.translationX, start.y + changedDirection.translationY);
+		} else {
+			routeInfo.botPositions[0] = new Point(start.x, start.y);
+		}
+		routeInfo.botsDepthMap[0] = RobotPath.getDepthGraph(routeInfo.board, routeInfo.botPositions[0].x, routeInfo.botPositions[0].y, routeInfo.board.goal.x, routeInfo.board.goal.y, false);
+		for (int i = 0; i < routeInfo.isBotMoveable.length; i++) {
+			routeInfo.isBotMoveable[i] = isBotMoveable[i];
+		}
+		
 		
 		return true;
 	}
 	
 	private Directions getDirectionFromTranslation(int xT, int yT)
 	{
-		if (xT == 0 && yT == -1) {
+		if (xT == 0 && yT < 0) {
 			return Directions.Up;
-		} else if (xT == 0 && yT == 1) {
+		} else if (xT == 0 && yT > 0) {
 			return Directions.Down;
-		} else if (xT == -1 && yT == 0) {
+		} else if (xT < 0 && yT == 0) {
 			return Directions.Left;
 		} else {
 			return Directions.Right;
@@ -167,9 +215,20 @@ public class RobotFiller implements Comparable<RobotFiller> {
 	
 	public void printFiller(Board board)
 	{
-		char[][] boardNew = new char[board.size][board.size];
-		for (int i = 0; i < boardNew.length; i++) {
-			
+		final char[][] boardCopy = board.copyBoard();
+		putFillerOnBoard(boardCopy);
+		System.out.println(Board.makeBoard(boardCopy));
+	}
+	
+	public void putFillerOnBoard(char[][] board)
+	{
+		Directions fillerDirection = getDirectionFromTranslation(start.x - end.x, start.y - end.y);
+		int currentX = end.x;
+		int currentY = end.y;
+		for (int i = 0; i < requiredRobots; i++) {
+			board[currentX][currentY] = '@';
+			currentX += fillerDirection.translationX;
+			currentY += fillerDirection.translationY;
 		}
 	}
 	
