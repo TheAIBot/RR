@@ -56,7 +56,6 @@ public final class RobotPath {
 		return directions;
 	}
 	
-	
  	public static Map<Integer, DepthPointer> getDepthGraph(Board board, int startX, int startY, int endX, int endY, boolean notMakeWholeGraph)
 	{
 		final Map<Integer, DepthPointer> depthGraph = new HashMap<Integer, DepthPointer>();
@@ -165,20 +164,15 @@ public final class RobotPath {
 			if (shortestRoute == null) {
 				break;
 			}
-			if (!shortestRoute.isValidPotentialRoute) {
-				continue;
-			}
 			if (shortestRoute.buildPath(board)) {
 				final RouteBuildingInformation routeInfo = shortestRoute.getPath(board);
 				if (routeInfo.route != null && routeInfo.canFindRoute) {
 					//Tools.printPath(routeInfo.route);
 					if (bestRoute == null ||
-							routeInfo.route.size() < bestRoute.length) {
-							bestRoute = routeInfo.route.toArray(new BotPathDirection[routeInfo.route.size()]);
-						}
+						routeInfo.route.size() < bestRoute.length) {
+						bestRoute = routeInfo.route.toArray(new BotPathDirection[routeInfo.route.size()]);
+					}
 				}
-			} else if (!shortestRoute.isValidPotentialRoute) {
-				continue;
 			}
 			if (shortestRoute.isValidPotentialRoute) {
 				routesToCheckout.add(shortestRoute);
@@ -196,10 +190,7 @@ public final class RobotPath {
 		}
 		MovePoint movePoint = board.staticMovePoints[x + direction.translationX][y + direction.translationY];
 		//if it's a wall
-		if (movePoint == null) {
-			return false;
-		}
-		return true;
+		return !(movePoint == null);
 	}
 	
 	private static PotentialRoute getPotentialRouteFromGoal(Board board, int endX, int endY, Directions stopPointDirection, int[] robotsThisPathIsFor, int[] robotsToBuildPathWith)
@@ -310,8 +301,8 @@ public final class RobotPath {
 					}
 				}
 			//need to add filler here that goes from end to start
-		} else if (robotOnEnd) {
-			fillers.add(new RobotFiller(startPoint, startPoint, 1, changedDirection, robotOnEnd, parentPart));
+		} else {
+			fillers.add(new RobotFiller(startPoint, startPoint, extra, changedDirection, robotOnEnd, parentPart));
 		}
 	}
 	
@@ -335,8 +326,8 @@ public final class RobotPath {
 						fillers.add(new RobotFiller(startPoint, possibleRobotAnchorPoint, moveY - y + extra, changedDirection, robotOnEnd, parentPart));
 					}
 				}
-		} else if (robotOnEnd) {
-			fillers.add(new RobotFiller(startPoint, startPoint, 1, changedDirection, robotOnEnd, parentPart));
+		} else {
+			fillers.add(new RobotFiller(startPoint, startPoint, extra, changedDirection, robotOnEnd, parentPart));
 		}
 	}
 	
@@ -360,8 +351,8 @@ public final class RobotPath {
 						fillers.add(new RobotFiller(startPoint, possibleRobotAnchorPoint, x - moveX + extra, changedDirection, robotOnEnd, parentPart));
 					}
 				}
-		} else if (robotOnEnd) {
-			fillers.add(new RobotFiller(startPoint, startPoint, 1, changedDirection, robotOnEnd, parentPart));
+		} else {
+			fillers.add(new RobotFiller(startPoint, startPoint, extra, changedDirection, robotOnEnd, parentPart));
 		}
 	}
 	
@@ -385,8 +376,8 @@ public final class RobotPath {
 						fillers.add(new RobotFiller(startPoint, possibleRobotAnchorPoint, moveX - x + extra, changedDirection, robotOnEnd, parentPart));
 					}
 				}
-		} else if (robotOnEnd) {
-			fillers.add(new RobotFiller(startPoint, startPoint, 1, changedDirection, robotOnEnd, parentPart));
+		} else {
+			fillers.add(new RobotFiller(startPoint, startPoint, extra, changedDirection, robotOnEnd, parentPart));
 		}
 	}
 

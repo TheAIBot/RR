@@ -40,11 +40,10 @@ public class PotentialRoute implements Comparable<PotentialRoute> {
 			final int robot = pathPart.robotsThisPathIsFor[i];
 			routeInfo.isBotMoveable[robot] = false;
 		}
-		//printFillers(board);
+		printFillers(board);
 		pathPart.addPath(routeInfo);
-		if (!pathPart.isValidPathPart) {
-			isValidPotentialRoute = false;
-		}
+		isValidPotentialRoute = pathPart.isValidPathPart;
+
 		if (routeInfo.canFindRoute &&
 				   !routeInfo.botPositions[0].equals(board.goal)) {
 			BotPathDirection[] routePart = RobotPath.getRobotPathToTarget(board, routeInfo.botPositions[0].x, routeInfo.botPositions[0].y, board.goal.x, board.goal.y, 0);

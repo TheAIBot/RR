@@ -32,7 +32,9 @@ public class RobotPathPart {
 		if (!mostRecentlyusedChangePoint.isValidDirectionChangePoint) {
 			if (robotDirectionChangePoints.size() == 0) {
 				isValidPathPart = false;
+				return false;
 			}
+			requiredRobots = robotDirectionChangePoints.peek().requiredRobots;
 			return false;
 		} else {
 			robotDirectionChangePoints.add(mostRecentlyusedChangePoint);
@@ -47,9 +49,11 @@ public class RobotPathPart {
 		if (mostRecentlyusedChangePoint.removeWhenRouteFound ||
 			!mostRecentlyusedChangePoint.isValidDirectionChangePoint) {
 			robotDirectionChangePoints.remove(mostRecentlyusedChangePoint); // super bad performing solution
-		}
-		if (robotDirectionChangePoints.size() == 0) {
-			isValidPathPart = false;
+			if (robotDirectionChangePoints.size() == 0) {
+				isValidPathPart = false;
+				return;
+			}
+			requiredRobots = robotDirectionChangePoints.peek().requiredRobots;
 		}
 	}
 	

@@ -23,82 +23,66 @@ public class ObligatoriskMapTests {
 		for (int i = 0; i < expected.length; i++) {
 			assertEquals(directions[i].toString(), expected[i]);
 		}
+		TestTools.testMap("obligatorisk_synlig\\Test1.in", new String[] {
+				"0L",
+				"0D"
+			});
 	}
 	
 	@Test
 	public void test2()
 	{
-		Board board = Loader.loadBoard("obligatorisk_synlig\\Test2.in");
-		BotPathDirection[] directions = RobotPath.getRobotPath(board, 5);
-		String[] expected = new String[] {
-			"0R",
-			"0D",
-			"0L",
-			"0U",
-			"0R"
-		};
-		for (int i = 0; i < expected.length; i++) {
-			assertEquals(directions[i].toString(), expected[i]);
-		}
+		TestTools.testMap("obligatorisk_synlig\\Test2.in", new String[] {
+				"0R",
+				"0D",
+				"0L",
+				"0U",
+				"0R"
+			});
 	}
 	
 	@Test
 	public void test3()
 	{
-		Board board = Loader.loadBoard("obligatorisk_synlig\\Test3.in");
-		BotPathDirection[] directions = RobotPath.getRobotPath(board, 5);
-		String[] expected = new String[] {
-			"0U",
-			"0R",
-			"0D",
-			"0L",
-			"0U"
-		};
-		for (int i = 0; i < expected.length; i++) {
-			assertEquals(directions[i].toString(), expected[i]);
-		}
+		TestTools.testMap("obligatorisk_synlig\\Test3.in", new String[] {
+				"0U",
+				"0R",
+				"0D",
+				"0L",
+				"0U"
+			});
 	}
 	
 	@Test
 	public void test4()
 	{
-		Board board = Loader.loadBoard("obligatorisk_synlig\\Test4.in");
-		BotPathDirection[] directions = RobotPath.getRobotPath(board, 5);
-		String[] expected = new String[] {
-			"0U",
-			"0L",
-			"0D",
-			"0R",
-			"0D",
-			"0L",
-			"0D",
-			"0R",
-			"0D"
-		};
-		for (int i = 0; i < expected.length; i++) {
-			assertEquals(directions[i].toString(), expected[i]);
-		}
+		TestTools.testMap("obligatorisk_synlig\\Test4.in", new String[] {
+				"0U",
+				"0L",
+				"0D",
+				"0R",
+				"0D",
+				"0L",
+				"0D",
+				"0R",
+				"0D"
+			});
 	}
 	
 	@Test
 	public void test5()
 	{
-		Board board = Loader.loadBoard("obligatorisk_synlig\\Test5.in");
-		BotPathDirection[] directions = RobotPath.getRobotPath(board, 5);
-		String[] expected = new String[] {
-			"0U",
-			"0L",
-			"0D",
-			"0R",
-			"0U",
-			"0R",
-			"0D",
-			"0R",
-			"0D",
-			"0R"
-		};
-		for (int i = 0; i < expected.length; i++) {
-			assertEquals(directions[i].toString(), expected[i]);
-		}
+		TestTools.testMap("obligatorisk_synlig\\Test5.in", new String[] {
+				"0U",
+				"0L",
+				"0D",
+				"0R",
+				"0U",
+				"0R",
+				"0D",
+				"0R",
+				"0D",
+				"0R"
+			});
 	}
 }
