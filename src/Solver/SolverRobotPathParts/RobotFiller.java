@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import Solver.Board;
 import Solver.BotPathDirection;
@@ -92,6 +93,7 @@ public class RobotFiller implements Comparable<RobotFiller> {
 					}
 				}
 			}
+			//looking for only index 0 to not be -1 might be incorrect
 			if (robotIndexForRobotsThatCanReachFiller[0] == -1) {
 				return false;
 			} else {
@@ -233,6 +235,7 @@ public class RobotFiller implements Comparable<RobotFiller> {
 		final char[][] boardCopy = board.copyBoard();
 		putFillerOnBoard(boardCopy);
 		System.out.println(Board.makeBoard(boardCopy));
+		System.out.println("------------");
 	}
 	
 	public void putFillerOnBoard(char[][] board)

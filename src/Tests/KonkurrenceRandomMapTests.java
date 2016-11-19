@@ -47,8 +47,19 @@ public class KonkurrenceRandomMapTests {
 	public void Random2_80()
 	{
 		TestTools.testMap("konkurrence_random\\2-80-Random.in", new String[] {
+				"1U",
+				"1L",
+				"1U",
+				"1L",
+				"1U",
 				"1R",
-				"0U"
+				"0U",
+				"0L",
+				"0U",
+				"0L",
+				"0U",
+				"0R",
+				"0D"
 			});
 	}
 	
@@ -140,8 +151,11 @@ public class KonkurrenceRandomMapTests {
 	public void Random8_045()
 	{
 		TestTools.testMap("konkurrence_random\\8-045-Random.in", new String[] {
-				"1R",
-				"0U"
+				"6D",
+				"0D",
+				"0R",
+				"0D",
+				"0L"
 			});
 	}
 	

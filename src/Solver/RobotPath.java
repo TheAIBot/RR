@@ -62,7 +62,9 @@ public final class RobotPath {
 		final Queue<MovePoint> toGoThrough = new LinkedList<MovePoint>();
 		final Map<Integer, Boolean> checkedPoints = new HashMap<Integer, Boolean>();
 		
-		depthGraph.put(Hasher.hashPoint(startX, startY), new DepthPointer(0, null, null, startX, startY));
+		final int startPositionHash = Hasher.hashPoint(startX, startY);
+		depthGraph.put(startPositionHash, new DepthPointer(0, null, null, startX, startY));
+		checkedPoints.put(startPositionHash, null);
 		toGoThrough.add(board.staticMovePoints[startX][startY]);
 		
 		while (toGoThrough.size() > 0) {
@@ -164,9 +166,10 @@ public final class RobotPath {
 			if (shortestRoute == null) {
 				break;
 			}
+			shortestRoute.printFillers(board);
 			if (shortestRoute.buildPath(board)) {
 				final RouteBuildingInformation routeInfo = shortestRoute.getPath(board);
-				if (routeInfo.route != null && routeInfo.canFindRoute) {
+				if (routeInfo.canFindRoute) {
 					//Tools.printPath(routeInfo.route);
 					if (bestRoute == null ||
 						routeInfo.route.size() < bestRoute.length) {
@@ -221,7 +224,7 @@ public final class RobotPath {
 		y += stopPointDirection.translationY;
 		
 		if (board.isValidPosition(x, y) && hasNoStopPoint) {
-			addRobotDirectionChangePoint(board, board.staticMovePoints[x][y], robotPathPart, stopPointDirection, stopPointDirection.getOppositeDirection(), x, y, hasNoStopPoint);
+			addRobotDirectionChangePoint(board, board.staticMovePoints[x][y], robotPathPart, stopPointDirection, stopPointDirection, x, y, hasNoStopPoint);
 		}
 		
 		while (board.isValidPosition(x, y)) {
@@ -275,6 +278,7 @@ public final class RobotPath {
 				getFillersRight(board, movePoint, fillers, x, y, robotOnEnd, direction.getOppositeDirection(), robotPathPart);
 				break;
 		}
+		fillers.stream().forEach(z -> z.printFiller(board));
 		if (fillers.size() > 0) {
 			robotPathPart.addRobotDirectionChangePoint(new RobotDirectionChangePoint(fillers, x, y, robotPathPart));
 		}
@@ -392,7 +396,8 @@ public final class RobotPath {
 						if (depthPointer.x == x &&
 							depthPointer.directionToLowest == Directions.Down &&
 							depthPointer.y >= y && 
-							depthPointer.y >= currentPosition.up.y) {
+							depthPointer.y >= currentPosition.up.y) 
+						{
 							interceptingDepthPointer = depthPointer;
 							break;
 						}
@@ -405,7 +410,8 @@ public final class RobotPath {
 						if (depthPointer.x == x &&
 							depthPointer.directionToLowest == Directions.Up &&
 							depthPointer.y <= y && 
-							depthPointer.y <= currentPosition.down.y) {
+							depthPointer.y <= currentPosition.down.y) 
+						{
 							interceptingDepthPointer = depthPointer;
 							break;
 						}
@@ -418,7 +424,8 @@ public final class RobotPath {
 						if (depthPointer.y == y &&
 							depthPointer.directionToLowest == Directions.Right &&
 							depthPointer.x >= x && 
-							depthPointer.x >= currentPosition.left.x) {
+							depthPointer.x >= currentPosition.left.x) 
+						{
 							interceptingDepthPointer = depthPointer;
 							break;
 						}
@@ -431,7 +438,8 @@ public final class RobotPath {
 						if (depthPointer.y == y &&
 							depthPointer.directionToLowest == Directions.Left &&
 							depthPointer.x <= x && 
-							depthPointer.x <= currentPosition.right.x) {
+							depthPointer.x <= currentPosition.right.x) 
+						{
 							interceptingDepthPointer = depthPointer;
 							break;
 						}

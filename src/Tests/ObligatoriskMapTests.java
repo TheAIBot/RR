@@ -14,15 +14,6 @@ public class ObligatoriskMapTests {
 	@Test
 	public void test1()
 	{
-		Board board = Loader.loadBoard("obligatorisk_synlig\\Test1.in");
-		BotPathDirection[] directions = RobotPath.getRobotPath(board, 5);
-		String[] expected = new String[] {
-			"0L",
-			"0D"
-		};
-		for (int i = 0; i < expected.length; i++) {
-			assertEquals(directions[i].toString(), expected[i]);
-		}
 		TestTools.testMap("obligatorisk_synlig\\Test1.in", new String[] {
 				"0L",
 				"0D"

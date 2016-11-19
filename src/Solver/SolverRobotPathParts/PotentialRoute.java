@@ -47,6 +47,10 @@ public class PotentialRoute implements Comparable<PotentialRoute> {
 		if (routeInfo.canFindRoute &&
 				   !routeInfo.botPositions[0].equals(board.goal)) {
 			BotPathDirection[] routePart = RobotPath.getRobotPathToTarget(board, routeInfo.botPositions[0].x, routeInfo.botPositions[0].y, board.goal.x, board.goal.y, 0);
+			if (routePart == null) {
+				routeInfo.canFindRoute = false;
+				return routeInfo;
+			}
 			for (int j = 0; j < routePart.length; j++) {
 				routeInfo.route.add(routePart[j]);
 			}
@@ -59,6 +63,7 @@ public class PotentialRoute implements Comparable<PotentialRoute> {
 		char[][] map = board.copyBoard();
 		pathPart.printBoardLayered(map);
 		System.out.println(Board.makeBoard(map));
+		System.out.println("------------");
 	}
 
 	@Override

@@ -47,7 +47,8 @@ public class RobotPathPart {
 	{
 		mostRecentlyusedChangePoint.addPath(routeInfo);
 		if (mostRecentlyusedChangePoint.removeWhenRouteFound ||
-			!mostRecentlyusedChangePoint.isValidDirectionChangePoint) {
+			!mostRecentlyusedChangePoint.isValidDirectionChangePoint) 
+		{
 			robotDirectionChangePoints.remove(mostRecentlyusedChangePoint); // super bad performing solution
 			if (robotDirectionChangePoints.size() == 0) {
 				isValidPathPart = false;
@@ -70,6 +71,13 @@ public class RobotPathPart {
 	
 	public void printBoardLayered(char[][] board)
 	{
-		mostRecentlyusedChangePoint.printFillerLayer(board);
+		if (mostRecentlyusedChangePoint == null) 
+		{
+			robotDirectionChangePoints.peek().printFillerLayer(board);
+		}
+		else
+		{
+			mostRecentlyusedChangePoint.printFillerLayer(board);
+		}
 	}
 }

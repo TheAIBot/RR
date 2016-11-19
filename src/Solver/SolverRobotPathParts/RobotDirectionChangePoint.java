@@ -94,7 +94,9 @@ public class RobotDirectionChangePoint implements Comparable<RobotDirectionChang
 	
 	public void printFillerLayer(char[][] board)
 	{
-		bestFiller.putFillerOnBoard(board);
+		if (bestFiller != null) {
+			bestFiller.putFillerOnBoard(board);
+		}
 		if (nextPathPart != null) {
 			nextPathPart.printBoardLayered(board);
 		}
