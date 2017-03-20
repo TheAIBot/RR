@@ -2,6 +2,9 @@ package Tests;
 
 import static org.junit.Assert.*;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+
 import Solver.Board;
 import Solver.BotPathDirection;
 import Solver.Loader;
@@ -18,13 +21,13 @@ public class TestTools
 
 		assertNotNull("Directions is null", directions);
 
-		for (BotPathDirection botPathDirection : directions)
-		{
-			System.out.println(botPathDirection.toString());
-		}
-
 		assertTrue(directions.length > 0);
 		assertFalse("Found shorter route", expectedRoute.length > directions.length);
+		
+		System.out.println("Expected:");
+		System.out.println(Arrays.toString(expectedRoute));
+		System.out.println("Found:");
+		System.out.println(Arrays.toString(directions));
 
 		for (int i = 0; i < expectedRoute.length; i++)
 		{

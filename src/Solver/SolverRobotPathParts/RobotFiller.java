@@ -61,7 +61,7 @@ public class RobotFiller implements Comparable<RobotFiller>
 			return true;
 		}
 		// printFiller(routeInfo.board);
-		final List<BotPathDirection> thisFillersRoute = new ArrayList<BotPathDirection>();
+ 		final List<BotPathDirection> thisFillersRoute = new ArrayList<BotPathDirection>();
 		final boolean[] isBotMoveable = Arrays.copyOf(routeInfo.isBotMoveable, routeInfo.isBotMoveable.length);
 		final Point[] botPositions = new Point[routeInfo.botPositions.length];
 		for (int i = 0; i < botPositions.length; i++)
@@ -154,9 +154,11 @@ public class RobotFiller implements Comparable<RobotFiller>
 			return false;
 		}
 		
-		//check if robot lads at the correct location. otherwise fail
-		int blockerPointX = start.x - changedDirection.translationX;
-		int blockerPointY = start.y - changedDirection.translationY;
+		//check if robot leads at the correct location. otherwise fail
+		//int blockerPointX = start.x - changedDirection.translationX;
+		//int blockerPointY = start.y - changedDirection.translationY;
+		int blockerPointX = start.x;// - changedDirection.translationX;
+		int blockerPointY = start.y;// - changedDirection.translationY;
 		Point moverStopPoint = RobotPath.getInterceptingStopPoint(blockerPointX, blockerPointY, higestPoint.directionToLowest);
 		Point expectedStopPoint = null;
 		if (robotOnEnd)

@@ -71,7 +71,7 @@ public class TestMaps
 	{
 		TestTools.testMap("test_maps\\Test6-3.in", new String[]
 		{
-				"0L", "0D"
+				"1D", "1R", "0R"
 		});
 	}
 }
