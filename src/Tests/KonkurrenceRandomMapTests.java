@@ -1,8 +1,15 @@
 package Tests;
 
+import org.junit.Before;
 import org.junit.Test;
 
 public class KonkurrenceRandomMapTests {
+	
+	@Before
+	public void limitTestTime()
+	{
+		TestTools.timePerMap = 5;
+	}
 	
 	@Test
 	public void Random1_005()
@@ -106,26 +113,10 @@ public class KonkurrenceRandomMapTests {
 	public void Random4_100()
 	{
 		TestTools.testMap("konkurrence_random\\4-100-Random.in", new String[] {
-				"3R",
-				"3U",
-				"3R",
-				"3U",
-				"3L",
-				"3D",
-				"3L",
-				"3D",
-				"3R",
-				"0U",
 				"0L",
-				"0U",
-				"0L",
-				"0U",
-				"0R",
-				"0D",
-				"0L",
-				"0D",
-				"0R",
-				"0U"
+				"2R",
+				"2D",
+				"0R"
 			});
 	}
 	

@@ -2,6 +2,7 @@ package Tests;
 
 import static org.junit.Assert.*;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import Solver.Board;
@@ -10,6 +11,12 @@ import Solver.Loader;
 import Solver.RobotPath;
 
 public class ObligatoriskMapTests {
+	
+	@Before
+	public void limitTestTime()
+	{
+		TestTools.timePerMap = 5;
+	}
 
 	@Test
 	public void test1()
